@@ -282,7 +282,7 @@
 			{
 				[[NSUserDefaults standardUserDefaults] removeObjectForKey:@"appDotNetUserToken"];
 			}
-			
+			[[NSNotificationCenter defaultCenter] postNotificationName:@"AppDotNetAuthChangedNotification" object:self];
 		}
 	}
 	
