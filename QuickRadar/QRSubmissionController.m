@@ -200,24 +200,9 @@
 
 - (CGFloat)progress
 {
-	CGFloat accumulator = 0;
-	CGFloat number = 0;
-	
-	for (QRSubmissionService *service in self.waiting)
-	{
-		number++;
-	}
-	for (QRSubmissionService *service in self.inProgress)
-	{
-		number++;
-		accumulator += service.progress;
-	}
-	for (QRSubmissionService *service in self.completed)
-	{
-		number++;
-		accumulator += 1.0;
-	}
-	
+	CGFloat number = self.waiting.count + self.inProgress.count + self.completed.count;
+    CGFloat accumulator = [[self.inProgress valueForKeyPath:@"@sum.progress"] floatValue] + self.completed.count;
+		
 	return accumulator/number;
 }
 
