@@ -91,10 +91,10 @@
 	for (QRSubmissionService *service in [self.waiting copy])
 	{
 		NSSet *hardDeps = [[service class] hardDependencies];
-        BOOL hasFailedHardDeps = [self hasFailedHardDependencies:hardDeps];
+        BOOL hasFailedHardDeps = [self hasFailedHardDependencies:hardDeps fromCompletedServices:[self.completed copy]];
 		
         NSSet *softDeps = [[service class] softDependencies];
-        BOOL hasFailedSoftDeps = [self hasFailedSoftDependencies:softDeps];
+        BOOL hasFailedSoftDeps = [self hasFailedSoftDependencies:softDeps fromWaitingServices:[self.waiting setByAddingObjectsFromSet:self.inProgress]];
 		
 		if (hasFailedHardDeps || hasFailedSoftDeps)
 		{
@@ -149,14 +149,14 @@
 /* Check hard deps */
 // For a hard dep, if the service in question is NOT completed, it fails.
 
-- (BOOL)hasFailedHardDependencies:(NSSet *)hardDependencies
+- (BOOL)hasFailedHardDependencies:(NSSet *)hardDependencies fromCompletedServices:(NSSet *)completedServices
 {
     BOOL hasFailedDeps = NO;
 
     for (NSString *serviceID in hardDependencies)
     {
         BOOL metThisDep = NO;
-        for (QRSubmissionService *testService in [self.completed copy])
+        for (QRSubmissionService *testService in completedServices)
         {
             if ([[[testService class] identifier] isEqualToString:serviceID])
             {
@@ -178,13 +178,13 @@
 /* Check soft deps */
 // For a soft dep, if the service in question is present and not finished, it fails.
 
-- (BOOL)hasFailedSoftDependencies:(NSSet *)softDependencies
+- (BOOL)hasFailedSoftDependencies:(NSSet *)softDependencies fromWaitingServices:(NSSet *)waitingServices
 {
 
     BOOL hasFailedDeps = NO;
     for (NSString *serviceID in softDependencies)
     {
-        for (QRSubmissionService *testService in [self.waiting setByAddingObjectsFromSet:self.inProgress])
+        for (QRSubmissionService *testService in waitingServices)
         {
             if ([[[testService class] identifier] isEqualToString:serviceID])
             {
