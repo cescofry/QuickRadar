@@ -101,41 +101,16 @@
 			continue;
 		}
 		
-		// Hopefully fix the OpenRadar multiple submissions bug
-		@synchronized(self)
-		{
-			if (![self.waiting containsObject:service])
-			{
-				continue;
-			}
-			
-			/* Get on with it */
-			
-			[self.inProgress addObject:service];
-			[self.waiting removeObject:service];
-			
-			[service submitAsyncWithProgressBlock:^{
-				self.progressBlock();
-			} completionBlock:^(BOOL success, NSError *error) {
-				[self.inProgress removeObject:service];
-				[self.completed addObject:service];
-				
-				if (!success)
-				{
-					NSLog(@"Failure by %@", [[service class] identifier]);
-					self.hasFiredCompletionBlock = YES;
-					self.completionBlock(NO, error);
-				}
-				else
-				{
-					[self startNextAvailableServices];
-				}
-				
-			}];
-		}
-		
-		
-		
+        // Hopefully fix the OpenRadar multiple submissions bug
+        @synchronized(self)
+        {
+            if (![self.waiting containsObject:service])
+            {
+                continue;
+            }
+            [self processService:service];
+        }
+        
 	}
 	
 	if (self.inProgress.count == 0 && self.waiting.count == 0 && !self.hasFiredCompletionBlock)
@@ -143,6 +118,32 @@
 		self.hasFiredCompletionBlock = YES;
 		self.completionBlock(YES, nil);
 	}
+}
+
+
+- (void)processService:(QRSubmissionService *)service
+{
+    [self.inProgress addObject:service];
+    [self.waiting removeObject:service];
+    
+    [service submitAsyncWithProgressBlock:^{
+        self.progressBlock();
+    } completionBlock:^(BOOL success, NSError *error) {
+        [self.inProgress removeObject:service];
+        [self.completed addObject:service];
+        
+        if (!success)
+        {
+            NSLog(@"Failure by %@", [[service class] identifier]);
+            self.hasFiredCompletionBlock = YES;
+            self.completionBlock(NO, error);
+        }
+        else
+        {
+            [self startNextAvailableServices];
+        }
+        
+    }];
 }
 
 
