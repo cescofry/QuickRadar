@@ -59,21 +59,12 @@
 		for (NSString *serviceID in services)
 		{
 			Class serviceClass = services[serviceID];
-			
-			if (![serviceClass isAvailable])
-			{
-				NSLog(@"%@ not available", serviceID);
-				continue;
-			}
-			
-			if ([serviceClass requireCheckBox])
-			{
-				if ([(self.requestedOptionalServices)[serviceID] boolValue] == NO)
-				{
-					NSLog(@"%@ not requested", serviceID);
-					continue;
-				}
-			}
+            
+            BOOL isValidRequestClass = [self isValidServiceClass:serviceClass forServiceID:serviceID isRequestedOptionalServices:[(self.requestedOptionalServices)[serviceID] boolValue]];
+            
+            if (!isValidRequestClass) {
+                continue;
+            }
 			
 			QRSubmissionService *service = [[serviceClass alloc] init];
 			service.radar = self.radar;
@@ -144,6 +135,25 @@
         }
         
     }];
+}
+
+- (BOOL)isValidServiceClass:(Class)serviceClass
+               forServiceID:(NSString *)serviceID
+isRequestedOptionalServices:(BOOL)isRequestedOptionalServices
+{
+    if (![serviceClass isAvailable])
+    {
+        NSLog(@"%@ not available", serviceID);
+        return NO;
+    }
+    
+    if ([serviceClass requireCheckBox] && !isRequestedOptionalServices)
+    {
+        NSLog(@"%@ not requested", serviceID);
+        return NO;
+    }
+    
+    return YES;
 }
 
 
