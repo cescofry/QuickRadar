@@ -91,44 +91,12 @@
 	for (QRSubmissionService *service in [self.waiting copy])
 	{
 		NSSet *hardDeps = [[service class] hardDependencies];
-		NSSet *softDeps = [[service class] softDependencies];
+        BOOL hasFailedHardDeps = [self hasFailedHardDependencies:hardDeps];
 		
-		BOOL hasFailedDeps = NO;
+        NSSet *softDeps = [[service class] softDependencies];
+        BOOL hasFailedSoftDeps = [self hasFailedSoftDependencies:softDeps];
 		
-		/* Check hard deps */
-		// For a hard dep, if the service in question is NOT completed, it fails.
-		for (NSString *serviceID in hardDeps)
-		{
-			BOOL metThisDep = NO;
-			for (QRSubmissionService *testService in [self.completed copy])
-			{
-				if ([[[testService class] identifier] isEqualToString:serviceID])
-				{
-					metThisDep = YES;
-				}
-			}
-			if (!metThisDep)
-			{
-				hasFailedDeps = YES;
-			}
-		}
-		
-		// TODO: decide what you're doing about serviceStatus -- either use it here, or remove it everywhere.
-		
-		/* Check soft deps */
-		// For a soft dep, if the service in question is present and not finished, it fails. 
-		for (NSString *serviceID in softDeps)
-		{
-			for (QRSubmissionService *testService in [self.waiting setByAddingObjectsFromSet:self.inProgress])
-			{
-				if ([[[testService class] identifier] isEqualToString:serviceID])
-				{
-					hasFailedDeps = YES;
-				}
-			}
-		}
-		
-		if (hasFailedDeps)
+		if (hasFailedHardDeps || hasFailedSoftDeps)
 		{
 			continue;
 		}
@@ -176,6 +144,58 @@
 		self.completionBlock(YES, nil);
 	}
 }
+
+
+/* Check hard deps */
+// For a hard dep, if the service in question is NOT completed, it fails.
+
+- (BOOL)hasFailedHardDependencies:(NSSet *)hardDependencies
+{
+    BOOL hasFailedDeps = NO;
+
+    for (NSString *serviceID in hardDependencies)
+    {
+        BOOL metThisDep = NO;
+        for (QRSubmissionService *testService in [self.completed copy])
+        {
+            if ([[[testService class] identifier] isEqualToString:serviceID])
+            {
+                metThisDep = YES;
+            }
+        }
+        if (!metThisDep)
+        {
+            hasFailedDeps = YES;
+        }
+    }
+    
+    return hasFailedDeps;
+}
+
+
+// TODO: decide what you're doing about serviceStatus -- either use it here, or remove it everywhere.
+
+/* Check soft deps */
+// For a soft dep, if the service in question is present and not finished, it fails.
+
+- (BOOL)hasFailedSoftDependencies:(NSSet *)softDependencies
+{
+
+    BOOL hasFailedDeps = NO;
+    for (NSString *serviceID in softDependencies)
+    {
+        for (QRSubmissionService *testService in [self.waiting setByAddingObjectsFromSet:self.inProgress])
+        {
+            if ([[[testService class] identifier] isEqualToString:serviceID])
+            {
+                hasFailedDeps = YES;
+            }
+        }
+    }
+    
+    return hasFailedDeps;
+}
+
 
 - (CGFloat)progress
 {
