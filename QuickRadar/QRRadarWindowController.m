@@ -110,7 +110,8 @@
 	
 	[self setUpCheckboxes];
 	
-    self.bodyTextView.font = [NSFont systemFontOfSize:[NSFont smallSystemFontSize]];
+	CGFloat fontSize = [[NSUserDefaults standardUserDefaults] doubleForKey:QRFontSizeKey];
+    self.bodyTextView.font = [NSFont systemFontOfSize:fontSize];
 	if (self.radarToPrepopulate.body.length>0)
 	{
 		self.bodyTextView.string = self.radarToPrepopulate.body;
@@ -429,6 +430,7 @@
 			[self.submitButton setEnabled:YES];
 			[self.draftButton setEnabled:YES];
 			[self.spinner stopAnimation:self];
+            self.progressBar.doubleValue = 0;
             self.submitStatusField.stringValue = @"";
 		}
 
